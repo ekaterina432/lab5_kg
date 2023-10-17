@@ -63,6 +63,9 @@
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="form_fraktal.resx">
+      <DependentUpon>form_fraktal.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -87,7 +90,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="L_system\высокое_дерево.txt" />
-    <Content Include="L_system\дерево.txt" />
     <Content Include="L_system\квадратный_остров_коха.txt" />
     <Content Include="L_system\ковер_серпинского.txt" />
     <Content Include="L_system\кривая_гилберта.txt" />
