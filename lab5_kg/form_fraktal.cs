@@ -18,6 +18,7 @@ namespace lab5_kg
         double angle;
         string direction;
         int iterations;
+
         SortedDictionary<char, string> rules;
         Stack<Tuple<double, double, double, double>> savedStates;
         double re, gree, wi;
@@ -68,6 +69,178 @@ namespace lab5_kg
                 }
             }
         }
+
+        private void textBoxChangeGeneration_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBoxChangeGeneration_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            char el = e.KeyChar;
+            if (!Char.IsDigit(el) && el != (char)Keys.Back) // можно вводить только цифры и стирать
+                e.Handled = true;
+        }
+
+        private void textBoxRandomFrom_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            char el = e.KeyChar;
+            if (!Char.IsDigit(el) && el != (char)Keys.Back && el != '-') // можно вводить только цифры, минус и стирать
+                e.Handled = true;
+        }
+
+        private void textBoxRandomTo_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            char el = e.KeyChar;
+            if (!Char.IsDigit(el) && el != (char)Keys.Back && el != '-') // можно вводить только цифры, минус и стирать
+                e.Handled = true;
+        }
+
+
+        void drawLSystem(string path)
+        {
+            List<double> xPoints = new List<double>();
+            List<double> yPoints = new List<double>();
+            List<Tuple<double, double, double, double>> lSystPoints =
+                new List<Tuple<double, double, double, double>>();
+            double x = 0, y = 0, dx = 0, dy = 0;
+
+            switch (direction)
+            {
+                case "LEFT":
+                    x = pictureBox1.Width;
+                    y = pictureBox1.Height / 2;
+                    dx = -(pictureBox1.Width / Math.Pow(10, iterations + 1));
+                    break;
+
+                case "RIGHT":
+                    y = pictureBox1.Height / 2;
+                    dx = pictureBox1.Width / Math.Pow(10, iterations + 1);
+                    break;
+
+                case "UP":
+                    x = pictureBox1.Width / 2;
+                    y = pictureBox1.Height;
+                    dy = -(pictureBox1.Height / Math.Pow(10, iterations + 1));
+                    break;
+
+                case "DOWN":
+                    x = pictureBox1.Width / 2;
+                    dy = pictureBox1.Height / Math.Pow(10, iterations + 1);
+                    break;
+
+                default: break;
+            }
+
+            xPoints.Add(x);
+            yPoints.Add(y);
+
+            double rx, ry;
+            double fixedAngle = angle; 
+            for (int i = 0; i < path.Length; ++i)
+            {
+                switch (path[i])
+                {
+                    case 'F':
+                        lSystPoints.Add(
+                            new Tuple<double, double, double, double>(x, y, x + dx, y + dy));
+                        x += dx;
+                        y += dy;
+                        xPoints.Add(x);
+                        yPoints.Add(y);
+                        break;
+
+                    case '+':
+                        rx = dx;
+                        ry = dy;
+                        dx = rx * Math.Cos(angle * Math.PI / 180) - ry * Math.Sin(angle * Math.PI / 180);
+                        dy = rx * Math.Sin(angle * Math.PI / 180) + ry * Math.Cos(angle * Math.PI / 180);
+                        break;
+
+                    case '-':
+                        rx = dx;
+                        ry = dy;
+                        dx = rx * Math.Cos(-angle * Math.PI / 180) - ry * Math.Sin(-angle * Math.PI / 180);
+                        dy = rx * Math.Sin(-angle * Math.PI / 180) + ry * Math.Cos(-angle * Math.PI / 180);
+                        break;
+
+                    case '[':
+                        savedStates.Push(new Tuple<double, double, double, double>(x, y, dx, dy));
+                        break;
+
+                    case ']':
+                        Tuple<double, double, double, double> coords = savedStates.Pop();
+                        x = coords.Item1;
+                        y = coords.Item2;
+                        dx = coords.Item3;
+                        dy = coords.Item4;
+                        break;
+
+                    default: break;
+                }
+            }
+
+            double xMax = xPoints.Max();
+            double xMin = xPoints.Min();
+            double yMax = yPoints.Max();
+            double yMin = yPoints.Min();
+            double scale = Math.Max(xMax - xMin, yMax - yMin);
+
+            re = 98;
+            gree = 0;
+            wi = 3;
+
+            foreach (var ps in lSystPoints)
+            {
+                System.Drawing.SolidBrush myBrush = new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb((int)re, (int)gree, 0));
+                Pen mypen = new Pen(myBrush);
+                mypen.Width = (float)wi;
+                g.DrawLine(mypen,
+                    (float)((xMax - ps.Item1) / scale * pictureBox1.Width),
+                    (float)((yMax - ps.Item2) / scale * pictureBox1.Height),
+                    (float)((xMax - ps.Item3) / scale * pictureBox1.Width),
+                    (float)((yMax - ps.Item4) / scale * pictureBox1.Height));
+                re -= 98 * 1.0 / lSystPoints.Count;
+                gree += 128 * 1.0 * 10 / lSystPoints.Count;
+                wi -= 8.0 / (float)lSystPoints.Count;
+                if (re < 0) re = 0;
+                if (gree > 128) gree = 128;
+                angle += (double)rand.Next(int.Parse(textBoxRandomFrom.Text), int.Parse(textBoxRandomTo.Text)) * Math.PI / 180;
+
+            }
+        }
+
+        string buildPath()
+        {
+            string prev = axiom;
+            string next = axiom;
+            int iter = 0;
+            while (iter < iterations)
+            {
+                prev = next;
+                next = "";
+                for (int i = 0; i < prev.Length; ++i)
+                {
+                    if (rules.ContainsKey(prev[i]))
+                        next += rules[prev[i]];
+                    else
+                        next += prev[i];
+                }
+                ++iter;
+            }
+            return next;
+        }
+
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            g.Clear(Color.White);
+            iterations = Convert.ToInt32(textBoxChangeGeneration.Text);
+            string path = buildPath();
+            drawLSystem(path);
+            pictureBox1.Invalidate();
+        }
+
 
 
     }
